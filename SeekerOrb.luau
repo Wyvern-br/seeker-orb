@@ -457,12 +457,23 @@ Players.PlayerAdded:Connect(function(player)
 end)
 
 --------------------------------------------------------------------------------
--- BOOTSTRAP — arrange the training dummies in a ring around the arena centre.
+-- BOOTSTRAP
+-- Stand the dummies just ahead of the map's SpawnLocation when one exists, so the
+-- demo is always visible right where players appear; otherwise use ArenaCenter.
 --------------------------------------------------------------------------------
+local function resolveArenaCenter(): Vector3
+	local spawn = Workspace:FindFirstChildWhichIsA("SpawnLocation", true)
+	if spawn then
+		return spawn.Position + spawn.CFrame.LookVector * 18 + Vector3.new(0, 3, 0)
+	end
+	return CONFIG.ArenaCenter
+end
+
+local arenaCenter = resolveArenaCenter()
 for i = 1, CONFIG.DummyCount do
 	local angle = (i / CONFIG.DummyCount) * math.pi * 2
 	local offset = Vector3.new(math.cos(angle), 0, math.sin(angle)) * 14
-	spawnDummy(CONFIG.ArenaCenter + offset)
+	spawnDummy(arenaCenter + offset)
 end
 
 print("[SeekerOrb] Ready — equip the Seeker Orb tool and click to fire.")
