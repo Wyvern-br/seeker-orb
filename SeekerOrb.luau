@@ -1,27 +1,24 @@
 -- Discord: wyvern_br  |  Roblox: Shurieo
 --[[
-	SeekerOrb.luau
-	Server-authoritative homing-projectile ability for a Roblox combat game.
+	SeekerOrb.luau  —  a homing projectile ability for my Roblox combat game.
 
-	Equip the "Seeker Orb" tool and click: a glowing orb launches from your
-	character, locks onto the nearest enemy inside a forward cone and curves
-	toward it using a clamped steering rule (bounded turn rate), then detonates on
-	contact and deals damage. Everything runs on the server so the outcome cannot
-	be spoofed by an exploiter — the client only asks, the server decides.
+	Equip the "Seeker Orb" tool and click. An orb launches from your character,
+	picks the nearest enemy in the cone in front of you and curves toward it
+	(it steers with a capped turn rate instead of snapping straight at the target),
+	then detonates on contact. The client only sends the click — the server does
+	the targeting, the movement and the damage, so it can't be faked by an exploit.
 
-	Techniques demonstrated:
-	  * Object-oriented Luau via metatables (the Projectile class).
-	  * CFrame / vector math: CFrame.lookAt to orient the visual, and
-	    CFrame.fromAxisAngle for the steering rotation (cross/dot products).
-	  * Frame-rate-independent physics: velocity integration with acceleration,
-	    a max-speed clamp, and a bounded turn rate scaled by delta-time.
-	  * A swept raycast across each step so a fast orb can never tunnel through a
-	    thin target or wall between frames.
-	  * Efficiency: a single shared Heartbeat loop drives every live orb, and orb
-	    parts are recycled through a pool instead of being re-created per shot.
+	The logic is commented inline; a few decisions worth calling out up front:
+	  - the orbs are objects (a small Projectile class on a metatable), but they
+	    share ONE Heartbeat loop rather than each starting their own;
+	  - every step raycasts across the distance travelled that frame, so a fast orb
+	    can't pass through a thin wall or target between two frames;
+	  - the steering is just a bounded rotation of the heading, built with
+	    CFrame.fromAxisAngle around the cross product of the two directions;
+	  - orb parts are pooled, not created and destroyed on every shot.
 
-	Place this Script in ServerScriptService. It builds its own training dummies
-	so it is fully self-contained and demonstrable with no extra scripts.
+	It's self-contained — it spawns its own dummies — so you can drop it into
+	ServerScriptService and press Play.
 ]]
 
 local Players = game:GetService("Players")

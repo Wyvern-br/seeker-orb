@@ -1,26 +1,32 @@
-# Seeker Orb — homing projectile ability (Roblox / Luau)
+# Seeker Orb
 
-A single, self-contained, **server-authoritative** homing-projectile ability written in Luau.
-Equip the **Seeker Orb** tool and click: a glowing orb launches from your character,
-locks onto the nearest enemy inside a forward cone, curves toward it with a bounded
-turn rate, and detonates on contact.
+A homing projectile ability I wrote in Luau for my Roblox combat game. You equip
+the orb, click, and it flies out and chases down the nearest dummy in front of you,
+curving to follow it instead of just pointing straight at it.
 
-**The code:** [`SeekerOrb.luau`](SeekerOrb.luau)
+The part I cared most about is that it's all decided on the server. The client only
+says "I clicked" — targeting, movement and damage all happen server-side, because an
+ability that trusts the client is trivial to cheat.
 
-## What it demonstrates
-- **Metatable-based OOP** — each orb in flight is a `Projectile` object.
-- **CFrame / vector math** — `CFrame.lookAt` to orient the orb, and
-  `CFrame.fromAxisAngle` (built from cross/dot products) for the steering rotation.
-- **Frame-rate-independent physics** — velocity integration with acceleration, a
-  max-speed clamp, and a turn rate scaled by delta-time.
-- **Swept raycast** — a ray across each frame's travel segment so a fast orb can
-  never tunnel through a thin wall or target.
-- **Efficiency** — one shared `Heartbeat` loop drives every live orb, and orb parts
-  are recycled through a pool instead of being re-created each shot.
+The whole thing is one script: [`SeekerOrb.luau`](SeekerOrb.luau)
 
-## How to run
-1. Put `SeekerOrb.luau` in **ServerScriptService** as a `Script`.
-2. Press Play. The script spawns its own training dummies (no imported models needed).
-3. Equip the **Seeker Orb** tool (press `1`) and click to fire.
+## A few things worth pointing out
 
-All behaviour is tunable from the `CONFIG` table at the top of the file.
+- Each orb is its own object (a small `Projectile` class built on a metatable), but
+  they don't each run a loop — a single `Heartbeat` connection steps all the live
+  orbs. Spawning a loop per projectile gets expensive quickly.
+- The homing isn't "rotate straight to the target". Every frame it turns the current
+  heading toward the target by a capped amount, using `CFrame.fromAxisAngle` around
+  the cross product of the two directions. Raise the cap and it snaps; lower it and
+  it makes wide arcs.
+- Hits are done with a raycast across the segment the orb moved that frame, not by
+  checking its position. Otherwise a fast orb can be in front of a thin wall one
+  frame and behind it the next without ever registering a touch.
+- Orb parts are reused from a pool instead of being created and destroyed each shot.
+
+## Running it
+
+Put `SeekerOrb.luau` in `ServerScriptService` as a `Script` and hit Play. It spawns
+its own training dummies, so there's nothing else to wire up — press `1` to equip the
+tool, then click. Speed, turn rate, damage and cone angle all live in the `CONFIG`
+table at the top if you want to mess with them.
