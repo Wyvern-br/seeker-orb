@@ -30,9 +30,7 @@ local TweenService = game:GetService("TweenService")
 local Debris = game:GetService("Debris")
 local Workspace = game:GetService("Workspace")
 
---------------------------------------------------------------------------------
 -- CONFIG — every tunable lives here so behaviour is data-driven, not hardcoded.
---------------------------------------------------------------------------------
 local CONFIG = {
 	LaunchSpeed = 40,                 -- studs/s the orb leaves the caster at
 	MaxSpeed = 150,                   -- studs/s the orb accelerates up to
@@ -54,18 +52,18 @@ local CONFIG = {
 	ArenaCenter = Vector3.new(0, 5, -20), -- where the dummies stand
 }
 
---------------------------------------------------------------------------------
+
 -- SHARED STATE
---------------------------------------------------------------------------------
+
 local Targets: { Model } = {}  -- enemy models an orb is allowed to home onto
 local Active: { [any]: boolean } = {} -- set of live Projectile objects
 local OrbPool: { BasePart } = {} -- recycled orb parts, to avoid churn
 
---------------------------------------------------------------------------------
+
 -- ORB PART POOL
 -- Re-creating an Instance for every shot is wasteful; instead we keep a small
 -- pool and hand parts back and forth as orbs are born and die.
---------------------------------------------------------------------------------
+
 local function buildOrbPart(): BasePart
 	local part = Instance.new("Part")
 	part.Shape = Enum.PartType.Ball
@@ -96,9 +94,9 @@ local function releaseOrbPart(part: BasePart)
 	table.insert(OrbPool, part)
 end
 
---------------------------------------------------------------------------------
+
 -- TARGETING HELPERS
---------------------------------------------------------------------------------
+
 
 -- A model is a valid target only while it exists and its Humanoid is alive.
 local function isAlive(model: Model?): boolean
@@ -156,11 +154,11 @@ local function spawnImpactFx(position: Vector3)
 	Debris:AddItem(flash, 0.4) -- auto-clean so the FX never accumulates
 end
 
---------------------------------------------------------------------------------
+
 -- PROJECTILE CLASS (metatable-based OOP)
 -- Each orb in flight is one Projectile object. All shared behaviour lives on the
 -- class table; per-orb data (position, velocity, target...) lives on the instance.
---------------------------------------------------------------------------------
+
 local Projectile = {}
 Projectile.__index = Projectile
 
@@ -318,22 +316,22 @@ function Projectile:step(dt: number): boolean
 	return true
 end
 
---------------------------------------------------------------------------------
+
 -- SIMULATION LOOP
 -- One shared Heartbeat connection steps every live orb. This is far cheaper than
 -- giving each orb its own connection and keeps all motion on a single clock.
---------------------------------------------------------------------------------
+
 RunService.Heartbeat:Connect(function(dt: number)
 	for projectile in Active do
 		projectile:step(dt)
 	end
 end)
 
---------------------------------------------------------------------------------
+
 -- TRAINING DUMMIES
 -- Minimal humanoid rigs built purely from code so the demo needs no imported
 -- models. Each carries a floating health bar and respawns after it is destroyed.
---------------------------------------------------------------------------------
+
 local function buildDummy(position: Vector3): Model
 	local model = Instance.new("Model")
 	model.Name = "SeekerDummy"
@@ -403,12 +401,12 @@ local function spawnDummy(position: Vector3)
 	end)
 end
 
---------------------------------------------------------------------------------
+
 -- CAST TRIGGER
 -- Players cast by clicking the "Seeker Orb" tool. Tool.Activated fires on the
 -- server, so the client only signals intent — the server validates the caster's
 -- state, enforces the cooldown, and is the sole authority that spawns the orb.
---------------------------------------------------------------------------------
+
 local function tryCast(player: Player)
 	local character = player.Character
 	if not character then
@@ -456,11 +454,11 @@ Players.PlayerAdded:Connect(function(player)
 	end
 end)
 
---------------------------------------------------------------------------------
+
 -- BOOTSTRAP
 -- Stand the dummies just ahead of the map's SpawnLocation when one exists, so the
 -- demo is always visible right where players appear; otherwise use ArenaCenter.
---------------------------------------------------------------------------------
+
 local function resolveArenaCenter(): Vector3
 	local spawn = Workspace:FindFirstChildWhichIsA("SpawnLocation", true)
 	if spawn then
